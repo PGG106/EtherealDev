@@ -528,7 +528,7 @@ int search(Thread *thread, PVariation *pv, int alpha, int beta, int depth) {
 
                 // Store an entry if we don't have a better one already
                 if (value >= rBeta && (!ttHit || ttDepth < depth - 3))
-                    tt_store(board->hash, thread->height, move, value, eval, depth-3, BOUND_LOWER);
+                    tt_store(board->hash, thread->height, move, value, ns->eval, depth-3, BOUND_LOWER);
 
                 // Probcut failed high verifying the cutoff
                 if (value >= rBeta) return value;
@@ -760,7 +760,7 @@ int search(Thread *thread, PVariation *pv, int alpha, int beta, int depth) {
     if (!ns->excluded && (!RootNode || !thread->multiPV)) {
         ttBound = best >= beta    ? BOUND_LOWER
                 : best > oldAlpha ? BOUND_EXACT : BOUND_UPPER;
-        tt_store(board->hash, thread->height, bestMove, best, eval, depth, ttBound);
+        tt_store(board->hash, thread->height, bestMove, best, ns->eval, depth, ttBound);
     }
 
     return best;
