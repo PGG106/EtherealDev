@@ -426,8 +426,14 @@ int search(Thread *thread, PVariation *pv, int alpha, int beta, int depth) {
     seeMargin[0] = SEENoisyMargin * depth * depth;
     seeMargin[1] = SEEQuietMargin * depth;
 
+    // Use the ttValue as a better static evaluation
+    if (   !inCheck
+        &&  ttValue != VALUE_NONE
+        && (ttBound & (ttValue > eval ? BOUND_LOWER : BOUND_UPPER)))
+        eval = ttValue;
+
     // Improving if our static eval increased in the last move
-    improving = !inCheck && eval > (ns-2)->eval;
+    improving = !inCheck &&  ns->eval > (ns-2)->eval;
 
     // Reset Killer moves for our children
     thread->killers[thread->height+1][0] = NONE_MOVE;
@@ -441,7 +447,7 @@ int search(Thread *thread, PVariation *pv, int alpha, int beta, int depth) {
 
     // Toss the static evaluation into the TT if we won't overwrite something
     if (!ttHit && !inCheck && !ns->excluded)
-        tt_store(board->hash, thread->height, NONE_MOVE, VALUE_NONE, eval, 0, BOUND_NONE);
+        tt_store(board->hash, thread->height, NONE_MOVE, VALUE_NONE, ns->eval, 0, BOUND_NONE);
 
     // ------------------------------------------------------------------------
     // All elo estimates as of Ethereal 11.80, @ 12s+0.12 @ 1.275mnps
@@ -454,7 +460,7 @@ int search(Thread *thread, PVariation *pv, int alpha, int beta, int depth) {
         && !inCheck
         && !ns->excluded
         &&  depth <= BetaPruningDepth
-        &&  eval - BetaMargin * depth > beta)
+        &&   ns->eval - BetaMargin * depth > beta)
         return eval;
 
     // Step 8 (~3 elo). Alpha Pruning for main search loop. The idea is
